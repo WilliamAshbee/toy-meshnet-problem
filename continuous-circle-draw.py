@@ -31,6 +31,6 @@ with open('labels.csv', 'w', newline='') as file:
         base = '/data/mialab/users/washbee/circles/'
         plt.savefig("{}{}.png".format(base,name), bbox_inches='tight')
         plt.close(fig)
-
+        
         writer.writerow(["{}{}.png".format(base,name), i, x, y, r])
         
