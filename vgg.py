@@ -7,7 +7,7 @@ __all__ = [
 
 class VGG(nn.Module):
 
-    def __init__(self, features, num_classes=1):
+    def __init__(self, features, num_classes=3):
         super(VGG, self).__init__()
         self.results =  None
         self.features = features

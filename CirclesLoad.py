@@ -4,10 +4,30 @@ from PIL import Image
 from glob import glob
 import os
 import numpy as np
-
+import csv
 class CirclesLoad(torch.utils.data.Dataset):
     def __init__(self, img_root, img_transform,
                  split='train'):
+        self.myvals = None
+        with open('/home/users/washbee1/projects/toy-meshnet-problem/labels.csv',mode = 'r') as infile:
+            reader = csv.reader(infile)
+            myvals = dict()
+            skip = True
+            for rows in reader:
+                if skip:
+                    skip = False
+                    continue
+                
+                k = rows[0]
+                if type(k) != type('str'):
+                    assert False
+                x = (float)(rows[2])
+                y = (float)(rows[3])
+                r = (float)(rows[4])
+                myvals[k] = torch.FloatTensor([x,y,r])
+            
+            self.myvals = myvals
+
         super(CirclesLoad, self).__init__()
         self.img_transform = img_transform
         # use about 8M images in the challenge dataset
@@ -31,7 +51,8 @@ class CirclesLoad(torch.utils.data.Dataset):
         path = self.paths[index]
         gt_img = Image.open(path)
         gt_img = self.img_transform(gt_img.convert('RGB'))
-        return gt_img, 0
+        assert gt_img.shape == (3,32,32)
+        return gt_img, self.myvals[path]
 
     def __len__(self):
         return len(self.paths)

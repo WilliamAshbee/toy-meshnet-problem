@@ -55,8 +55,10 @@ dataset_train = CirclesLoad(args.root,  img_tf, 'train')
 dataset_val = CirclesLoad(args.root,  img_tf, 'train')
 
 print (len(dataset_train))
+mini_batch = 512
+
 iterator_train = iter(data.DataLoader(
-    dataset_train, batch_size=64,
+    dataset_train, batch_size=mini_batch,
     sampler=InfiniteSampler(len(dataset_train)),
     num_workers=4))
 
@@ -66,35 +68,30 @@ import torch.nn as nn
 
 criterion = nn.BCELoss().cuda()
 num_labels = 2
-mini_batch = 64
-optimizer = optim.Adam(model.parameters(), lr=.0001, betas=(0.5, 0.999))
+optimizer = optim.Adam(model.parameters(), lr=.00001, betas=(0.5, 0.999))
 
-def my_loss(logits, gt):
-    loss = torch.mean(torch.abs(logits-gt))
+def my_loss(logits, gtlbls):
+    assert logits.shape[0] == mini_batch
+    loss =  torch.mean(torch.abs(logits-gtlbls))
     return loss
 
     
-for i in tqdm(range(0, 10)):
-    image, gt = [x.to(device) for x in next(iterator_train)]
-    if image.shape[0] != 64:
-        break
+for i in tqdm(range(0, 300)):
+    image, gtlbls = [x.to(device) for x in next(iterator_train)]
+    if image.shape[0] != mini_batch:
+        print('breaking out of short img')
+        continue
     model.train()
-    print (image.shape, "image")
     optimizer.zero_grad()
-    y_ = (torch.rand(mini_batch, 1) * num_labels).type(torch.cuda.LongTensor).squeeze()
-    print(y_.shape,"y") 
+    #y_ = (torch.rand(mini_batch, 1) * num_labels).type(torch.cuda.LongTensor).squeeze()
     
     output = model(image)
-    print("output", output.shape)
-    #output = output.type(torch.cuda.LongTensor)
-    gt = gt.type(torch.cuda.FloatTensor)
-    print (output.dtype)
-    print(gt.dtype)
-    
-    loss = my_loss(output, gt)
+    loss = my_loss(output, gtlbls)
+    if i%100 == 0:
+        print("loss",loss)
     loss.backward()
     optimizer.step()
-    print (i)
+    
 
 #    if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
 #        save_ckpt('{:s}/ckpt/{:d}.pth'.format(args.save_dir, i + 1),
