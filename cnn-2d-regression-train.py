@@ -91,7 +91,9 @@ for i in tqdm(range(0, 300)):
         print("loss",loss)
     loss.backward()
     optimizer.step()
-    
+
+torch.save(model.state_dict(), "xyrmodel.pth")
+
 
 #    if (i + 1) % args.save_model_interval == 0 or (i + 1) == args.max_iter:
 #        save_ckpt('{:s}/ckpt/{:d}.pth'.format(args.save_dir, i + 1),
